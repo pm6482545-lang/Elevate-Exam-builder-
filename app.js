@@ -2,20 +2,23 @@ import { supabase } from './SupabaseClient.js'
 import { buildKnecPrompt } from './prompts.js'
 
 document.getElementById('fetchCurriculumBtn').addEventListener('click', async () => {
-    const grade = document.getElementById('gradeSelect').value;
+    const rawGrade = document.getElementById('gradeSelect').value;
     const subject = document.getElementById('subjectSelect').value;
     const standard = document.getElementById('blueprintSelect').value;
     const outputArea = document.getElementById('outputArea');
 
-    if (!grade || !subject) {
+    if (!rawGrade || !subject) {
         outputArea.innerHTML = `<span class="text-red-500 font-medium">Please select both a Grade and a Subject first.</span>`;
         return;
     }
 
-    outputArea.innerHTML = `Validating curriculum and generating ${standard} exam structure for ${grade} - ${subject}...`;
+    // Clean up the grade string (e.g. "Grade 9 (KJSEA Style)" -> "Grade 9")
+    const grade = rawGrade.split(' ')[0] + ' ' + rawGrade.split(' ')[1];
+
+    outputArea.innerHTML = `Querying curriculum for ${grade} - ${subject}...`;
 
     try {
-        // FIXED: Only querying columns that actually exist in your curriculum_designs table
+        // Query Supabase using exact existing columns
         const { data, error } = await supabase
             .from('curriculum_designs')
             .select('strand_name, sub_strand_name')
@@ -27,11 +30,11 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         }
 
         if (!data || data.length === 0) {
-            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No curriculum records found for ${grade} ${subject}.</span>`;
+            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No curriculum records found for ${grade} (${subject}). Check your database table spelling.</span>`;
             return;
         }
 
-        // Generate the strict KNEC AI prompt using our prompts.js module
+        // Generate the strict KNEC AI prompt
         const knecPromptText = buildKnecPrompt(standard, grade, subject, data);
 
         // Build a professional KNEC-style LaTeX exam document
@@ -51,9 +54,8 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         latexCode += `\\hrule\\vspace{1em}\n\n`;
         latexCode += `\\section*{Instructions to Candidates}\n`;
         latexCode += `Answer all questions in the spaces provided. Ensure all diagrams are drawn using proper proportions.\n\n`;
-        latexCode += `\\section*{Exam Questions (Generated from Approved Curriculum Scope)}\n`;
+        latexCode += `\\section*{Exam Questions}\n`;
         
-        // Add placeholder questions structured by your database curriculum strands
         let qNum = 1;
         data.forEach((item) => {
             const strand = item.strand_name || 'General Strand';
@@ -65,13 +67,12 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
 
         latexCode += `\\end{document}`;
 
-        // Render the final output box
-        let html = `<p class="font-semibold text-green-700 mb-2">Exam Generated Successfully for ${standard} (${grade} ${subject})!</p>`;
-        
+        // Render output
+        let html = `<p class="font-semibold text-green-700 mb-2">Exam Generated Successfully (${data.length} strands mapped)!</p>`;
         html += `<div class="space-y-4">`;
         html += `<div>`;
-        html += `<p class="text-xs font-semibold text-slate-700 mb-1">1. Master LaTeX Exam Code (Copy and paste into Overleaf):</p>`;
-        html += `<textarea readonly class="w-full h-56 font-mono text-xs bg-slate-900 text-green-400 p-3 rounded-lg">${latexCode}</textarea>`;
+        html += `<p class="text-xs font-semibold text-slate-700 mb-1">Master LaTeX Exam Code (Ready for Overleaf):</p>`;
+        html += `<textarea readonly class="w-full h-64 font-mono text-xs bg-slate-900 text-green-400 p-3 rounded-lg">${latexCode}</textarea>`;
         html += `</div>`;
         html += `</div>`;
         
