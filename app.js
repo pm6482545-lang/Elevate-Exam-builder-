@@ -1,4 +1,5 @@
 import { supabase } from './SupabaseClient.js'
+import { buildKnecPrompt } from './prompts.js'
 
 document.getElementById('fetchCurriculumBtn').addEventListener('click', async () => {
     const grade = document.getElementById('gradeSelect').value;
@@ -30,6 +31,9 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
             return;
         }
 
+        // Generate the strict KNEC AI prompt using our prompts.js module
+        const knecPromptText = buildKnecPrompt(standard, grade, subject, data);
+
         // Build a KNEC-style LaTeX preview based on the retrieved curriculum
         let latexCode = `\\documentclass[12pt,a4paper]{article}\n`;
         latexCode += `\\usepackage[utf8]{inputenc}\n`;
@@ -60,10 +64,20 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         latexCode += `% --- AI Question Generation Block Goes Here ---\n`;
         latexCode += `\\end{document}`;
 
-        // Render the results and provide code copy options
-        let html = `<p class="font-semibold text-green-700 mb-2">Successfully loaded ${data.length} curriculum milestones for ${standard}!</p>`;
-        html += `<p class="text-xs text-slate-500 mb-3">Generated LaTeX Code (Ready for Overleaf / KNEC Formatting):</p>`;
-        html += `<textarea readonly class="w-full h-64 font-mono text-xs bg-slate-900 text-green-400 p-3 rounded-lg">${latexCode}</textarea>`;
+        // Render the results and display both outputs
+        let html = `<p class="font-semibold text-green-700 mb-2">Successfully compiled blueprints for ${standard} (${grade} ${subject})!</p>`;
+        
+        html += `<div class="space-y-4">`;
+        html += `<div>`;
+        html += `<p class="text-xs font-semibold text-slate-700 mb-1">1. Strict KNEC AI Prompt (Enforces syllabus boundaries & style):</p>`;
+        html += `<textarea readonly class="w-full h-40 font-mono text-xs bg-slate-900 text-amber-300 p-3 rounded-lg">${knecPromptText}</textarea>`;
+        html += `</div>`;
+
+        html += `<div>`;
+        html += `<p class="text-xs font-semibold text-slate-700 mb-1">2. Generated Master LaTeX Document Code:</p>`;
+        html += `<textarea readonly class="w-full h-48 font-mono text-xs bg-slate-900 text-green-400 p-3 rounded-lg">${latexCode}</textarea>`;
+        html += `</div>`;
+        html += `</div>`;
         
         outputArea.innerHTML = html;
 
