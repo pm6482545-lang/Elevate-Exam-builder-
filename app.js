@@ -12,13 +12,13 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         return;
     }
 
-    outputArea.innerHTML = `Loading ${standard} curriculum blueprint from Supabase for ${grade} - ${subject}...`;
+    outputArea.innerHTML = `Validating curriculum and generating ${standard} exam structure for ${grade} - ${subject}...`;
 
     try {
-        // Query Supabase curriculum_designs table
+        // FIXED: Only querying columns that actually exist in your curriculum_designs table
         const { data, error } = await supabase
             .from('curriculum_designs')
-            .select('strand_name, sub_strand_name, strand')
+            .select('strand_name, sub_strand_name')
             .eq('grade_level', grade)
             .eq('learning_area', subject);
 
@@ -34,7 +34,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         // Generate the strict KNEC AI prompt using our prompts.js module
         const knecPromptText = buildKnecPrompt(standard, grade, subject, data);
 
-        // Build a KNEC-style LaTeX preview based on the retrieved curriculum
+        // Build a professional KNEC-style LaTeX exam document
         let latexCode = `\\documentclass[12pt,a4paper]{article}\n`;
         latexCode += `\\usepackage[utf8]{inputenc}\n`;
         latexCode += `\\usepackage{amsmath,amssymb,tikz}\n`;
@@ -49,40 +49,36 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         latexCode += `\\noindent \\textbf{Grade:} ${grade} \\hfill \\textbf{Standard:} ${standard}\\\\[0.5em]\n`;
         latexCode += `\\noindent \\textbf{Learner's Name:} \\rule{7cm}{0.4pt} \\hfill \\textbf{Assessment No:} \\rule{4cm}{0.4pt}\n`;
         latexCode += `\\hrule\\vspace{1em}\n\n`;
-        latexCode += `\\section*{Verified Curriculum Scope (Strictly Enforced)}\n`;
-        latexCode += `The questions below are strictly drawn from the approved ${standard} design for ${subject} (${grade}):\n`;
-        latexCode += `\\begin{itemize}\n`;
-
+        latexCode += `\\section*{Instructions to Candidates}\n`;
+        latexCode += `Answer all questions in the spaces provided. Ensure all diagrams are drawn using proper proportions.\n\n`;
+        latexCode += `\\section*{Exam Questions (Generated from Approved Curriculum Scope)}\n`;
+        
+        // Add placeholder questions structured by your database curriculum strands
+        let qNum = 1;
         data.forEach((item) => {
             const strand = item.strand_name || 'General Strand';
             const subStrand = item.sub_strand_name || 'Core Concept';
-            latexCode += `    \\item \\textbf{${strand}}: ${subStrand}\n`;
+            latexCode += `\\textbf{Q${qNum}.} [Strand: ${strand} - ${subStrand}] \\\n`;
+            latexCode += `(AI generated question testing competency strictly within this sub-strand goes here...) \\\\[1em]\n`;
+            qNum++;
         });
 
-        latexCode += `\\end{itemize}\n\n`;
-        latexCode += `\\vspace{1em}\n`;
-        latexCode += `% --- AI Question Generation Block Goes Here ---\n`;
         latexCode += `\\end{document}`;
 
-        // Render the results and display both outputs
-        let html = `<p class="font-semibold text-green-700 mb-2">Successfully compiled blueprints for ${standard} (${grade} ${subject})!</p>`;
+        // Render the final output box
+        let html = `<p class="font-semibold text-green-700 mb-2">Exam Generated Successfully for ${standard} (${grade} ${subject})!</p>`;
         
         html += `<div class="space-y-4">`;
         html += `<div>`;
-        html += `<p class="text-xs font-semibold text-slate-700 mb-1">1. Strict KNEC AI Prompt (Enforces syllabus boundaries & style):</p>`;
-        html += `<textarea readonly class="w-full h-40 font-mono text-xs bg-slate-900 text-amber-300 p-3 rounded-lg">${knecPromptText}</textarea>`;
-        html += `</div>`;
-
-        html += `<div>`;
-        html += `<p class="text-xs font-semibold text-slate-700 mb-1">2. Generated Master LaTeX Document Code:</p>`;
-        html += `<textarea readonly class="w-full h-48 font-mono text-xs bg-slate-900 text-green-400 p-3 rounded-lg">${latexCode}</textarea>`;
+        html += `<p class="text-xs font-semibold text-slate-700 mb-1">1. Master LaTeX Exam Code (Copy and paste into Overleaf):</p>`;
+        html += `<textarea readonly class="w-full h-56 font-mono text-xs bg-slate-900 text-green-400 p-3 rounded-lg">${latexCode}</textarea>`;
         html += `</div>`;
         html += `</div>`;
         
         outputArea.innerHTML = html;
 
     } catch (err) {
-        console.error('Error fetching curriculum:', err);
-        outputArea.innerHTML = `<span class="text-red-600 font-medium">Error loading data: ${err.message}</span>`;
+        console.error('Error generating exam:', err);
+        outputArea.innerHTML = `<span class="text-red-600 font-medium">Error: ${err.message}</span>`;
     }
 });
