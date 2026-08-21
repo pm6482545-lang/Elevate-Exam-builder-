@@ -12,30 +12,31 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         return;
     }
 
-    // Clean up grade string (e.g. "Grade 9 (KJSEA Style)" -> "Grade 9")
-    const grade = rawGrade.split(' ')[0] + ' ' + rawGrade.split(' ')[1];
+    // Extract just the grade number/name (e.g., "Grade 9")
+    const gradeMatch = rawGrade.match(/Grade \d+/i);
+    const gradeQuery = gradeMatch ? gradeMatch[0] : rawGrade;
 
-    outputArea.innerHTML = `Querying curriculum for ${grade} - ${subject}...`;
+    outputArea.innerHTML = `Querying curriculum for ${gradeQuery} - ${subject}...`;
 
     try {
-        // Query matching your exact table columns: grade, learning_area, strand_name, sub_strand_name
+        // Using ilike for flexible case-insensitive and partial matching
         const { data, error } = await supabase
             .from('curriculum_designs')
             .select('strand_name, sub_strand_name, learning_area, grade')
-            .eq('grade', grade)
-            .eq('learning_area', subject);
+            .ilike('grade', `%${gradeQuery}%`)
+            .ilike('learning_area', `%${subject}%`);
 
         if (error) {
             throw error;
         }
 
         if (!data || data.length === 0) {
-            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for ${grade} and ${subject}. Check if your database has rows matching these values.</span>`;
+            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for "${gradeQuery}" and "${subject}". Please verify the exact values stored in your Supabase table.</span>`;
             return;
         }
 
         // Generate the strict KNEC AI prompt
-        const knecPromptText = buildKnecPrompt(standard, grade, subject, data);
+        const knecPromptText = buildKnecPrompt(standard, gradeQuery, subject, data);
 
         // Build a professional KNEC-style LaTeX exam document
         let latexCode = `\\documentclass[12pt,a4paper]{article}\n`;
@@ -49,7 +50,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         latexCode += `    \\textbf{\\large KENYA NATIONAL EXAMINATIONS COUNCIL}\\\\[0.2em]\n`;
         latexCode += `    \\textbf{\\normalsize \\uppercase{${standard} ASSESSMENT -- ${subject.toUpperCase()}}}\n`;
         latexCode += `\\end{center}\n\n`;
-        latexCode += `\\noindent \\textbf{Grade:} ${grade} \\hfill \\textbf{Standard:} ${standard}\\\\[0.5em]\n`;
+        latexCode += `\\noindent \\textbf{Grade:} ${gradeQuery} \\hfill \\textbf{Standard:} ${standard}\\\\[0.5em]\n`;
         latexCode += `\\noindent \\textbf{Learner's Name:} \\rule{7cm}{0.4pt} \\hfill \\textbf{Assessment No:} \\rule{4cm}{0.4pt}\n`;
         latexCode += `\\hrule\\vspace{1em}\n\n`;
         latexCode += `\\section*{Instructions to Candidates}\n`;
