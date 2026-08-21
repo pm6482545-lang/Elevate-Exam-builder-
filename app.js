@@ -12,32 +12,33 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         return;
     }
 
-    // Clean up dropdown string: "Grade 9 (KJSEA Style)" becomes "Grade 9" to match database records
-    const grade = rawGrade.split(' ')[0] + ' ' + rawGrade.split(' ')[1];
+    // Clean up grade string (e.g. extracts "Grade 4" from whatever format the dropdown has)
+    const gradeClean = rawGrade.replace(/[\(\)].*$/, '').trim();
+    const subjectClean = subject.trim();
 
-    outputArea.innerHTML = `Querying curriculum for ${grade} - ${subject}...`;
+    outputArea.innerHTML = `Querying curriculum for "${gradeClean}" and "${subjectClean}"...`;
 
     try {
-        // Strict query matching your exact database columns: grade and learning_area
+        // Use robust ilike queries with wildcards to bypass exact whitespace/casing issues
         const { data, error } = await supabase
             .from('curriculum_designs')
             .select('strand_name, sub_strand_name, learning_area, grade')
-            .eq('grade', grade)
-            .eq('learning_area', subject);
+            .ilike('grade', `%${gradeClean}%`)
+            .ilike('learning_area', `%${subjectClean}%`);
 
         if (error) {
             throw error;
         }
 
         if (!data || data.length === 0) {
-            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${grade}" and learning area "${subject}". Please check your Supabase data rows.</span>`;
+            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${gradeClean}" and learning area "${subjectClean}". Double check if Grade 4 Mathematics exists in your table.</span>`;
             return;
         }
 
         // Generate the strict KNEC AI prompt
-        const knecPromptText = buildKnecPrompt(standard, grade, subject, data);
+        const knecPromptText = buildKnecPrompt(standard, gradeClean, subjectClean, data);
 
-        // Build a professional KNEC-style LaTeX exam document
+        // Build professional LaTeX exam code
         let latexCode = `\\documentclass[12pt,a4paper]{article}\n`;
         latexCode += `\\usepackage[utf8]{inputenc}\n`;
         latexCode += `\\usepackage{amsmath,amssymb,tikz}\n`;
@@ -47,9 +48,9 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         latexCode += `\\begin{center}\n`;
         latexCode += `    \\textbf{\\Large REPUBLIC OF KENYA}\\\\[0.4em]\n`;
         latexCode += `    \\textbf{\\large KENYA NATIONAL EXAMINATIONS COUNCIL}\\\\[0.2em]\n`;
-        latexCode += `    \\textbf{\\normalsize \\uppercase{${standard} ASSESSMENT -- ${subject.toUpperCase()}}}\n`;
+        latexCode += `    \\textbf{\\normalsize \\uppercase{${standard} ASSESSMENT -- ${subjectClean.toUpperCase()}}}\n`;
         latexCode += `\\end{center}\n\n`;
-        latexCode += `\\noindent \\textbf{Grade:} ${grade} \\hfill \\textbf{Standard:} ${standard}\\\\[0.5em]\n`;
+        latexCode += `\\noindent \\textbf{Grade:} ${gradeClean} \\hfill \\textbf{Standard:} ${standard}\\\\[0.5em]\n`;
         latexCode += `\\noindent \\textbf{Learner's Name:} \\rule{7cm}{0.4pt} \\hfill \\textbf{Assessment No:} \\rule{4cm}{0.4pt}\n`;
         latexCode += `\\hrule\\vspace{1em}\n\n`;
         latexCode += `\\section*{Instructions to Candidates}\n`;
