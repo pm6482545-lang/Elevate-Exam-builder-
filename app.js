@@ -12,17 +12,17 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         return;
     }
 
-    // Clean up the grade string (e.g. "Grade 9 (KJSEA Style)" -> "Grade 9")
+    // Clean up grade string (e.g. "Grade 9 (KJSEA Style)" -> "Grade 9")
     const grade = rawGrade.split(' ')[0] + ' ' + rawGrade.split(' ')[1];
 
     outputArea.innerHTML = `Querying curriculum for ${grade} - ${subject}...`;
 
     try {
-        // Query Supabase using exact existing columns
+        // Query matching your exact table columns: grade, learning_area, strand_name, sub_strand_name
         const { data, error } = await supabase
             .from('curriculum_designs')
-            .select('strand_name, sub_strand_name')
-            .eq('grade_level', grade)
+            .select('strand_name, sub_strand_name, learning_area, grade')
+            .eq('grade', grade)
             .eq('learning_area', subject);
 
         if (error) {
@@ -30,7 +30,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         }
 
         if (!data || data.length === 0) {
-            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No curriculum records found for ${grade} (${subject}). Check your database table spelling.</span>`;
+            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for ${grade} and ${subject}. Check if your database has rows matching these values.</span>`;
             return;
         }
 
