@@ -12,29 +12,26 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         return;
     }
 
+    // Clean up grade string to precisely match "Grade 9", "Grade 7", etc.
     const gradeClean = rawGrade.replace(/[\(\–\-].*$/, '').trim();
     const subjectClean = subject.trim();
 
     outputArea.innerHTML = `Querying curriculum for "${gradeClean}" and "${subjectClean}"...`;
 
     try {
-        console.log("Sending query to Supabase for:", { gradeClean, subjectClean });
-
+        // Use direct exact-match filters (.eq) for absolute accuracy with your database structure
         const { data, error } = await supabase
             .from('curriculum_designs')
             .select('strand_name, sub_strand_name, learning_area, grade')
-            .ilike('grade', `%${gradeClean}%`)
-            .ilike('learning_area', `%${subjectClean}%`);
-
-        console.log("Supabase Response - Data:", data);
-        console.log("Supabase Response - Error:", error);
+            .eq('grade', gradeClean)
+            .eq('learning_area', subjectClean);
 
         if (error) {
             throw error;
         }
 
         if (!data || data.length === 0) {
-            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${gradeClean}" and learning area "${subjectClean}". Check console logs.</span>`;
+            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${gradeClean}" and learning area "${subjectClean}". Please verify entries exist in Supabase.</span>`;
             return;
         }
 
@@ -71,6 +68,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
 
         latexCode += `\\end{document}`;
 
+        // Render output
         let html = `<p class="font-semibold text-green-700 mb-2">Exam Generated Successfully (${data.length} strands mapped)!</p>`;
         html += `<div class="space-y-4">`;
         html += `<div>`;
@@ -82,7 +80,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         outputArea.innerHTML = html;
 
     } catch (err) {
-        console.error('Error generating exam caught:', err);
+        console.error('Error generating exam:', err);
         outputArea.innerHTML = `<span class="text-red-600 font-medium">Error: ${err.message}</span>`;
     }
 });
