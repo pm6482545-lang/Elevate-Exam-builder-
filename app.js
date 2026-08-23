@@ -49,9 +49,9 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         // 2. Build the prompt
         const knecPromptText = buildKnecPrompt(standard, gradeClean, subjectClean, data, customPrompt, imagesInput);
 
-        // 3. Call the Gemini API to generate actual question text
+        // 3. Call the Gemini API using the updated production model
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.7-flash',
             contents: knecPromptText,
             config: {
                 systemInstruction: "You are an expert KNEC Chief Examiner. Output ONLY raw LaTeX question text for Section A and Section B.",
