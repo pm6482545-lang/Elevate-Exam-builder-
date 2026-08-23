@@ -12,8 +12,8 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         return;
     }
 
-    // Clean up grade string (e.g. extracts "Grade 4" from whatever format the dropdown has)
-    const gradeClean = rawGrade.replace(/[\(\)].*$/, '').trim();
+    // Robust cleaning: removes anything in parentheses or after a dash to leave just "Grade X"
+    const gradeClean = rawGrade.replace(/[\(\–\-].*$/, '').trim();
     const subjectClean = subject.trim();
 
     outputArea.innerHTML = `Querying curriculum for "${gradeClean}" and "${subjectClean}"...`;
@@ -31,7 +31,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         }
 
         if (!data || data.length === 0) {
-            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${gradeClean}" and learning area "${subjectClean}". Double check if Grade 4 Mathematics exists in your table.</span>`;
+            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${gradeClean}" and learning area "${subjectClean}". Please check if this combination exists in your curriculum_designs table.</span>`;
             return;
         }
 
