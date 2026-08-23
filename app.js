@@ -12,26 +12,29 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         return;
     }
 
-    // Robust cleaning: removes anything in parentheses or after a dash to leave just "Grade X"
     const gradeClean = rawGrade.replace(/[\(\–\-].*$/, '').trim();
     const subjectClean = subject.trim();
 
     outputArea.innerHTML = `Querying curriculum for "${gradeClean}" and "${subjectClean}"...`;
 
     try {
-        // Use robust ilike queries with wildcards to bypass exact whitespace/casing issues
+        console.log("Sending query to Supabase for:", { gradeClean, subjectClean });
+
         const { data, error } = await supabase
             .from('curriculum_designs')
             .select('strand_name, sub_strand_name, learning_area, grade')
             .ilike('grade', `%${gradeClean}%`)
             .ilike('learning_area', `%${subjectClean}%`);
 
+        console.log("Supabase Response - Data:", data);
+        console.log("Supabase Response - Error:", error);
+
         if (error) {
             throw error;
         }
 
         if (!data || data.length === 0) {
-            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${gradeClean}" and learning area "${subjectClean}". Please check if this combination exists in your curriculum_designs table.</span>`;
+            outputArea.innerHTML = `<span class="text-amber-600 font-medium">No records found for grade "${gradeClean}" and learning area "${subjectClean}". Check console logs.</span>`;
             return;
         }
 
@@ -68,7 +71,6 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
 
         latexCode += `\\end{document}`;
 
-        // Render output
         let html = `<p class="font-semibold text-green-700 mb-2">Exam Generated Successfully (${data.length} strands mapped)!</p>`;
         html += `<div class="space-y-4">`;
         html += `<div>`;
@@ -80,7 +82,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         outputArea.innerHTML = html;
 
     } catch (err) {
-        console.error('Error generating exam:', err);
+        console.error('Error generating exam caught:', err);
         outputArea.innerHTML = `<span class="text-red-600 font-medium">Error: ${err.message}</span>`;
     }
 });
