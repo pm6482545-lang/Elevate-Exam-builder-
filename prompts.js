@@ -4,17 +4,23 @@ export function buildKnecPrompt(standard, grade, subject, curriculumData, custom
     const cumulativeSummary = curriculumData.map(item => `[${item.grade}] ${item.strand_name} -> ${item.sub_strand_name}`).join('\n');
 
     return `
-You are the Chief National Examiner for the Kenya National Examinations Council (KNEC). 
-Your task is to generate an original, highly rigorous ${standard} assessment paper for ${subject} tailored for ${grade}.
+You are the Chief National Examiner for the Kenya National Examinations Council (KNEC) under the CBC curriculum. 
+Generate a complete, high-quality ${standard} assessment exam paper for ${subject} tailored for ${grade}.
 
-=== SPIRAL CURRICULUM RULE (CUMULATIVE SCOPE) ===
-Since this is a ${grade} national examination, questions must spiral downwards to test foundational competencies across Grade 7, Grade 8, and Grade 9 based on this official database scope:
+=== CUMULATIVE SCOPE (SPIRAL CURRICULUM) ===
+Incorporate competencies spanning the following database records across Grades 7, 8, and 9:
 ${cumulativeSummary}
 
-=== EXAMINER CREATIVITY & VARIATION RULES ===
-1. NO REPETITION: Create unique numbers, values, and scenarios so that no two questions test the exact same angle. If generating multiple items from the same sub-strand, vary the cognitive depth (using Bloom's Taxonomy: Knowledge, Comprehension, Application, Analysis).
-2. KENYAN CONTEXT: Use local names (e.g., Juma, Chebet, Wanjiru), Kenyan currency (KES), local towns, schools, and real-world agricultural or commercial settings.
-3. CUSTOM EXAMINER DIRECTIVE: ${customPrompt ? customPrompt : 'Maintain standard KNEC blueprint proportions.'}
-4. ASSETS: ${imagesList ? `Incorporate image references: ${imagesList}` : 'Use TikZ code for geometric or scientific diagrams where necessary.'}
+=== FORMAT REQUIREMENTS ===
+Provide output strictly in valid LaTeX question format divided into two sections:
+1. \\section*{SECTION A: Multiple Choice Questions (20 Marks)}
+   - Provide 10 distinct, rigorous multiple-choice questions with options A, B, C, D using \\textbf{Q1.}, \\textbf{Q2.}, etc.
+2. \\section*{SECTION B: Structured Questions (30 Marks)}
+   - Provide 10 rigorous open-ended / structured questions with mark allocations like \\hfill \\textbf{[3 marks]} and vertical spacing for working.
+
+=== RULES ===
+- Use realistic Kenyan contexts (local names, KES currency, geographic features, local schools).
+- Custom Examiner Instructions: ${customPrompt ? customPrompt : 'Maintain standard KNEC balance.'}
+- Image References to include: ${imagesList ? imagesList : 'None'}
 `;
 }
