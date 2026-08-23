@@ -2,15 +2,10 @@ import { supabase } from './SupabaseClient.js'
 import { buildKnecPrompt } from './prompts.js'
 import { GoogleGenAI } from 'https://esm.run/@google/genai';
 
-// Automatically remember API key in browser session storage
-const apiKeyInput = document.getElementById('apiKeyInput');
-apiKeyInput.value = localStorage.getItem('elevate_gemini_key') || '';
-apiKeyInput.addEventListener('input', () => {
-    localStorage.setItem('elevate_gemini_key', apiKeyInput.value.trim());
-});
+// Initialize the Gemini client directly with your personal API key
+const ai = new GoogleGenAI({ apiKey: 'AQ.Ab8RN6JQ3eCN62zeTWvaPwku1d3OgDMryIngp8fiVG4gMZH-oQ' });
 
 document.getElementById('fetchCurriculumBtn').addEventListener('click', async () => {
-    const apiKey = apiKeyInput.value.trim();
     const rawGrade = document.getElementById('gradeSelect').value;
     const subject = document.getElementById('subjectSelect').value;
     const standard = document.getElementById('blueprintSelect').value;
@@ -18,13 +13,8 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
     const imagesInput = document.getElementById('imageFilenames').value;
     const outputArea = document.getElementById('outputArea');
 
-    if (!apiKey) {
-        outputArea.innerHTML = `<span class="text-red-500 font-medium">Please enter your Gemini API key above first.</span>`;
-        return;
-    }
-
     if (!rawGrade || !subject) {
-        outputArea.innerHTML = `<span class="text-red-500 font-medium">Please select both a Grade and a Subject.</span>`;
+        outputArea.innerHTML = `<span class="text-red-500 font-medium">Please select both a Grade and a Subject first.</span>`;
         return;
     }
 
@@ -59,9 +49,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         // 2. Build the prompt
         const knecPromptText = buildKnecPrompt(standard, gradeClean, subjectClean, data, customPrompt, imagesInput);
 
-        // 3. Initialize Gemini client using the user's secure key
-        const ai = new GoogleGenAI({ apiKey: apiKey });
-
+        // 3. Call the Gemini API to generate actual question text
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: knecPromptText,
