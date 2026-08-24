@@ -2,8 +2,8 @@ import { supabase } from './SupabaseClient.js'
 import { buildKnecPrompt } from './prompts.js'
 import { GoogleGenAI } from 'https://esm.run/@google/genai';
 
-// Initialize the Gemini client correctly with the options object format
-const ai = new GoogleGenAI({ apiKey: 'AQ.Ab8RN6JQ3eCN62zeTWvaPwku1d3OgDMryIngp8fiVG4gMZH-oQ' });
+// Initialize the Gemini client with your new, active API key
+const ai = new GoogleGenAI({ apiKey: 'AQ.Ab8RN6J78T6mcyMsz7PYA_NRdgkvvJhIgj9SHy5MT6KBHlIrDg' });
 
 document.getElementById('fetchCurriculumBtn').addEventListener('click', async () => {
     const rawGrade = document.getElementById('gradeSelect').value;
@@ -49,7 +49,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         // 2. Build the prompt
         const knecPromptText = buildKnecPrompt(standard, gradeClean, subjectClean, data, customPrompt, imagesInput);
 
-        // 3. Call the Gemini API using gemini-3.7-flash (or gemini-3.5-flash-lite)
+        // 3. Call the Gemini API using gemini-3.7-flash
         const response = await ai.models.generateContent({
             model: 'gemini-3.7-flash',
             contents: knecPromptText,
