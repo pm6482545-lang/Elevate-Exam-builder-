@@ -1,9 +1,8 @@
 import { supabase } from './SupabaseClient.js'
 import { buildKnecPrompt } from './prompts.js'
-import { GoogleGenAI } from 'https://esm.run/@google/genai';
 
-// Initialize the Gemini client with your new, active API key
-const ai = new GoogleGenAI({ apiKey: 'AQ.Ab8RN6J78T6mcyMsz7PYA_NRdgkvvJhIgj9SHy5MT6KBHlIrDg' });
+// Direct API Key configuration for your browser app
+const GEMINI_API_KEY = 'AQ.Ab8RN6J78T6mcyMsz7PYA_NRdgkvvJhIgj9SHy5MT6KBHlIrDg';
 
 document.getElementById('fetchCurriculumBtn').addEventListener('click', async () => {
     const rawGrade = document.getElementById('gradeSelect').value;
@@ -49,17 +48,34 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         // 2. Build the prompt
         const knecPromptText = buildKnecPrompt(standard, gradeClean, subjectClean, data, customPrompt, imagesInput);
 
-        // 3. Call the Gemini API using gemini-3.7-flash
-        const response = await ai.models.generateContent({
-            model: 'gemini-3.7-flash',
-            contents: knecPromptText,
-            config: {
-                systemInstruction: "You are an expert KNEC Chief Examiner. Output ONLY raw LaTeX question text for Section A and Section B.",
-                temperature: 0.7
-            }
+        // 3. Call the Gemini REST API directly from the browser
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        
+        const apiResponse = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: knecPromptText }]
+                }],
+                systemInstruction: {
+                    parts: [{ text: "You are an expert KNEC Chief Examiner. Output ONLY raw LaTeX question text for Section A and Section B." }]
+                },
+                generationConfig: {
+                    temperature: 0.7
+                }
+            })
         });
 
-        const generatedQuestionsLatex = response.text;
+        const resultJson = await apiResponse.json();
+
+        if (!apiResponse.ok) {
+            throw new Error(resultJson.error?.message || 'Failed to generate content from Gemini API');
+        }
+
+        const generatedQuestionsLatex = resultJson.candidates[0].content.parts[0].text;
 
         // 4. Wrap everything into the Master LaTeX document container
         let latexCode = `\\documentclass[12pt,a4paper]{article}\n`;
