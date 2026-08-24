@@ -1,8 +1,8 @@
 import { supabase } from './SupabaseClient.js'
 import { buildKnecPrompt } from './prompts.js'
 
-// Direct API Key configuration for your browser app
-const GEMINI_API_KEY = 'AQ.Ab8RN6J78T6mcyMsz7PYA_NRdgkvvJhIgj9SHy5MT6KBHlIrDg';
+// Your new AQ-prefixed Auth Key
+const GEMINI_API_KEY = 'AQ.Ab8RN6Kf6auWGtH4oSg6ZSkY4UEVAG8rgG8C9CQ0grQq77z3_A';
 
 document.getElementById('fetchCurriculumBtn').addEventListener('click', async () => {
     const rawGrade = document.getElementById('gradeSelect').value;
@@ -48,13 +48,14 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         // 2. Build the prompt
         const knecPromptText = buildKnecPrompt(standard, gradeClean, subjectClean, data, customPrompt, imagesInput);
 
-        // 3. Call the Gemini REST API directly from the browser
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // 3. Call the Gemini REST API using the x-goog-api-key header (Required for AQ keys)
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
         
         const apiResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'x-goog-api-key': GEMINI_API_KEY
             },
             body: JSON.stringify({
                 contents: [{
