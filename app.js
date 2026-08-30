@@ -15,7 +15,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
     const gradeClean = rawGrade.replace(/[\(\–\-].*$/, '').trim();
     const subjectClean = subject.trim();
 
-    // Determine cumulative grade scope following national exam rules (e.g., KJSEA scope)
+    // Determine cumulative grade scope following national exam rules
     let targetGrades = [gradeClean];
     if (gradeClean === 'Grade 8') {
         targetGrades = ['Grade 7', 'Grade 8'];
@@ -23,10 +23,10 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         targetGrades = ['Grade 7', 'Grade 8', 'Grade 9'];
     }
 
-    outputArea.innerHTML = `Synthesizing standalone independent assessment for ${subjectClean} across ${targetGrades.join(', ')}...`;
+    outputArea.innerHTML = `Extracting curriculum design records for ${subjectClean} (${targetGrades.join(', ')})...`;
 
     try {
-        // 1. Fetch all curriculum designs for the selected subject and grade scope from Supabase
+        // 1. Fetch curriculum design rows including the actual content column
         const { data, error } = await supabase
             .from('curriculum_designs')
             .select('strand_name, sub_strand_name, learning_area, grade, content')
@@ -40,37 +40,30 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
             return;
         }
 
-        // 2. Shuffle and pick unique curriculum nodes to ensure non-repeating, creative variations
-        const shuffledRows = data.sort(() => 0.5 - Math.random()).slice(0, 15);
+        // 2. Shuffle and select unique curriculum nodes
+        const shuffledRows = data.sort(() => 0.5 - Math.random()).slice(0, 10);
 
-        let generatedQuestionsLatex = `\\section*{Section A: Comprehensive Assessment}\n`;
+        let generatedQuestionsLatex = `\\section*{SECTION A: Structured Assessment}\n`;
         generatedQuestionsLatex += `\\begin{enumerate}\n`;
 
         shuffledRows.forEach((row) => {
             const strand = row.strand_name || "Core Strand";
             const subStrand = row.sub_strand_name || "Specific Concept";
-            
-            // Tailor question phrasing dynamically based on the subject category
-            if (subjectClean.toLowerCase().includes('math')) {
-                const num1 = Math.floor(Math.random() * 40) + 10;
-                const num2 = Math.floor(Math.random() * 9) + 2;
-                generatedQuestionsLatex += `    \\item \\textbf{(${strand} -- ${subStrand})} Work out the value when a quantity of ${num1} is scaled uniformly by a factor of ${num2} within standard national parameters.\\\\[0.5em]\n`;
-                generatedQuestionsLatex += `    \\textit{Show all necessary working steps.}\\\\[1.2em]\n`;
-            } else if (subjectClean.toLowerCase().includes('english') || subjectClean.toLowerCase().includes('kiswahili')) {
-                generatedQuestionsLatex += `    \\item Read the contextual focus on \\textbf{${subStrand}} under \\textit{${strand}}. Explain how structural mechanics and stylistic devices are applied in this scenario.\\\\[0.5em]\n`;
-                generatedQuestionsLatex += `    \\textit{Space for structured response.}\\\\[1.2em]\n`;
-            } else {
-                // Universal dynamic generator for Sciences, Humanities, Technical subjects, etc.
-                generatedQuestionsLatex += `    \\item With reference to \\textbf{${subStrand}} (${strand}), analyze its primary practical significance and application within the Kenyan context.\\\\[0.5em]\n`;
-                generatedQuestionsLatex += `    \\textit{Space for detailed explanation.}\\\\[1.2em]\n`;
-            }
+            const dbContent = row.content ? row.content.trim() : `Examine the principles governing ${subStrand}.`;
+
+            // Use the actual database content/learning outcome to drive the question text
+            generatedQuestionsLatex += `    \\item \\textbf{(${strand} -- ${subStrand})} \\\\\n`;
+            generatedQuestionsLatex += `    ${dbContent}\\\\[0.4em]\n`;
+            generatedQuestionsLatex += `    \\textit{(a)} Explain the core concepts involved in this learning outcome within a Kenyan context. \\hfill \\textbf{[3 marks]}\\\\[0.5em]\n`;
+            generatedQuestionsLatex += `    \\textit{(b)} Give two practical applications of this concept in daily life. \\hfill \\textbf{[2 marks]}\\\\[1.2em]\n`;
         });
 
         generatedQuestionsLatex += `\\end{enumerate}\n\n`;
 
         if (customPrompt) {
-            generatedQuestionsLatex += `\\section*{Section B: Extended Task}\n`;
+            generatedQuestionsLatex += `\\section*{SECTION B: Applied Task}\n`;
             generatedQuestionsLatex += `\\noindent \\textbf{Instructions:} ${customPrompt}\\\\[0.5em]\n`;
+            generatedQuestionsLatex += `Using relevant methodologies, address the thematic requirements stated above with precise calculations or descriptive breakdowns.\n`;
         }
 
         // 3. Assemble Master LaTeX Document Structure
@@ -93,8 +86,8 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
 
         latexCode += `\\section*{Instructions to Candidates}\n`;
         latexCode += `\\begin{enumerate}\n`;
-        latexCode += `    \\item Answer \\textbf{all} questions.\n`;
-        latexCode += `    \\item This paper is generated dynamically from official curriculum designs without external API dependencies.\n`;
+        latexCode += `    \\item Answer \\textbf{all} questions in the spaces provided.\n`;
+        latexCode += `    \\item This paper is generated directly from your database curriculum designs.\n`;
         latexCode += `\\end{enumerate}\n`;
         latexCode += `\\hrule\\vspace{1em}\n\n`;
 
@@ -102,7 +95,7 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         latexCode += `\n\\end{document}`;
 
         outputArea.innerHTML = `
-            <p class="font-semibold text-green-700 mb-2">Standalone Independent Exam Generated Successfully for ${subjectClean}!</p>
+            <p class="font-semibold text-green-700 mb-2">Exam Successfully Built from Database Records for ${subjectClean}!</p>
             <div class="space-y-4">
                 <textarea readonly class="w-full h-64 font-mono text-xs bg-slate-900 text-green-400 p-3 rounded-lg">${latexCode}</textarea>
             </div>
