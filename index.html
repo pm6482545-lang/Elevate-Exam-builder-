@@ -41,6 +41,10 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Assessment Standard</label>
+                <!-- Note: this is used as a display label only. The generator derives
+                     the actual KPSEA/KJSEA rules from the selected Grade, so picking
+                     Grade 9 always produces a KJSEA-structured paper even if this
+                     dropdown is left on its default. -->
                 <select id="blueprintSelect" class="w-full border border-slate-300 rounded-lg p-2.5 bg-white">
                     <option value="KPSEA">KPSEA Standard (Primary)</option>
                     <option value="KJSEA">KJSEA Standard (Junior School)</option>
@@ -60,9 +64,17 @@
             </div>
         </div>
 
-        <button id="fetchCurriculumBtn" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">
-            Generate Live AI Exam in LaTeX
-        </button>
+        <div class="flex flex-wrap gap-3 mb-2">
+            <button id="fetchCurriculumBtn" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">
+                Generate Curriculum-Based Exam (LaTeX)
+            </button>
+            <button id="generateBatchBtn" class="bg-slate-700 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-slate-800 transition">
+                Generate 20 Unique Papers
+            </button>
+            <button id="checkCoverageBtn" class="bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-lg font-medium hover:bg-slate-100 transition">
+                Check Curriculum Coverage
+            </button>
+        </div>
 
         <!-- Results Display Box -->
         <div class="mt-8">
