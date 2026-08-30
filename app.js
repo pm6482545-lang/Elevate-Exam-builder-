@@ -49,9 +49,10 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         shuffledRows.forEach((row) => {
             const strand = row.strand_name || "Core Strand";
             const subStrand = row.sub_strand_name || "Specific Concept";
-            const dbContent = row.content ? row.content.trim() : `Examine the principles governing ${subStrand}.`;
+            
+            // Safely handle content by casting to String first to avoid trim errors on null/objects
+            const dbContent = row.content ? String(row.content).trim() : `Examine the principles governing ${subStrand}.`;
 
-            // Use the actual database content/learning outcome to drive the question text
             generatedQuestionsLatex += `    \\item \\textbf{(${strand} -- ${subStrand})} \\\\\n`;
             generatedQuestionsLatex += `    ${dbContent}\\\\[0.4em]\n`;
             generatedQuestionsLatex += `    \\textit{(a)} Explain the core concepts involved in this learning outcome within a Kenyan context. \\hfill \\textbf{[3 marks]}\\\\[0.5em]\n`;
