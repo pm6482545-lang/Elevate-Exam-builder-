@@ -50,8 +50,8 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
             const strand = row.strand_name || "Core Strand";
             const subStrand = row.sub_strand_name || "Specific Concept";
             
-            // Safely handle content by casting to String first to avoid trim errors on null/objects
-            const dbContent = row.content ? String(row.content).trim() : `Examine the principles governing ${subStrand}.`;
+            // Completely safe wrapper avoiding any built-in prototype string method failures
+            const dbContent = row.content ? `${row.content}` : `Examine the principles governing ${subStrand}.`;
 
             generatedQuestionsLatex += `    \\item \\textbf{(${strand} -- ${subStrand})} \\\\\n`;
             generatedQuestionsLatex += `    ${dbContent}\\\\[0.4em]\n`;
