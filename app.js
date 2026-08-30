@@ -46,17 +46,31 @@ document.getElementById('fetchCurriculumBtn').addEventListener('click', async ()
         let generatedQuestionsLatex = `\\section*{SECTION A: Structured Assessment}\n`;
         generatedQuestionsLatex += `\\begin{enumerate}\n`;
 
-        shuffledRows.forEach((row) => {
+        shuffledRows.forEach((row, index) => {
             const strand = row.strand_name || "Core Strand";
             const subStrand = row.sub_strand_name || "Specific Concept";
             
-            // Completely safe wrapper avoiding any built-in prototype string method failures
-            const dbContent = row.content ? `${row.content}` : `Examine the principles governing ${subStrand}.`;
+            // Generate authentic contextual problem statements based on the sub-strand topic
+            let problemText = `Work out the standard problems associated with ${subStrand}.`;
+            let subQuestions = `
+    \\textit{(a)} Calculate or evaluate the given parameters for ${subStrand} under standard CBC guidelines. \\hfill \\textbf{[3 marks]}\\\\[0.5em]
+    \\textit{(b)} Solve a real-life contextual problem involving ${subStrand} in a Kenyan setting. \\hfill \\textbf{[2 marks]}
+            `;
+
+            const subLower = subStrand.toLowerCase();
+            if (subLower.includes('square')) {
+                problemText = `Evaluate the expression: $\\sqrt{57.76} + \\left(14.2\\right)^2$ correct to 2 decimal places.`;
+            } else if (subLower.includes('fraction')) {
+                problemText = `Simplify completely: $\\frac{\\frac{3}{4} \\div \\frac{2}{3} + \\frac{1}{6}}{\\frac{5}{8} \\times \\frac{4}{5}}$`;
+            } else if (subLower.includes('scale')) {
+                problemText = `On a map drawn to a scale of $1:50,000$, a school playground measures $4.5 \\text{ cm}$ by $3.2 \\text{ cm}$. Find the actual area of the playground in hectares.`;
+            } else if (subLower.includes('indices') || subLower.includes('logarithm')) {
+                problemText = `Solve for $x$ in the equation: $3^{(2x - 1)} = 27$`;
+            }
 
             generatedQuestionsLatex += `    \\item \\textbf{(${strand} -- ${subStrand})} \\\\\n`;
-            generatedQuestionsLatex += `    ${dbContent}\\\\[0.4em]\n`;
-            generatedQuestionsLatex += `    \\textit{(a)} Explain the core concepts involved in this learning outcome within a Kenyan context. \\hfill \\textbf{[3 marks]}\\\\[0.5em]\n`;
-            generatedQuestionsLatex += `    \\textit{(b)} Give two practical applications of this concept in daily life. \\hfill \\textbf{[2 marks]}\\\\[1.2em]\n`;
+            generatedQuestionsLatex += `    ${problemText}\\\\[0.6em]\n`;
+            generatedQuestionsLatex += subQuestions + `\\\\[1.2em]\n`;
         });
 
         generatedQuestionsLatex += `\\end{enumerate}\n\n`;
